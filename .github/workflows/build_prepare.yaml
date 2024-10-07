@@ -32,6 +32,7 @@ jobs:
           jq -s '.[0] * .[1]' package.old.json overrides/package.patch.json > package.json
 
       - name: Get config
+        shell: bash
         run: |
           mkdir -p "${{ inputs.config }}"
           curl -sSfLo "${{ inputs.config }}/config.json" "$CONFIG_URL"
@@ -56,7 +57,7 @@ jobs:
           sed -e "s|https://Element|$CONFIG_DIR|" -e 's/#76CFA6/#1B4A1B/' -i deploys/element-*/web/res/manifest.json
         env:
           CONFIG_URL: ${{ secrets.CONFIG_URL }}
-          CONFIG_DIR: ${{ env.CONFIG_DIR }}
+          CONFIG_DIR: ${{ inputs.config }}
 
       - name: Pack updated asar
         run: yarn run asar p deploys/element-* webapp.asar
