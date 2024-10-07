@@ -18,7 +18,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          name: element-hq/element-desktop
+          repository: element-hq/element-desktop
           ref: ${{ inputs.version }}
 
       - uses: actions/checkout@v4
