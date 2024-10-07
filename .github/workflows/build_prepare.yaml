@@ -55,9 +55,17 @@ jobs:
 
       - name: Pack updated asar
         run: |
-          cp -r overrides/res deploys/element-*
-          sed -e "s|https://element.io|${CONFIG_URL%/*}|" -i deploys/element-*/web/res/welcome.html
-          sed -e "s|https://Element|$CONFIG_DIR|" -e 's/#76CFA6/#1B4A1B/' -i deploys/element-*/web/res/manifest.json
+          cp -r overrides/res "deploys/element-${{ inputs.version }}"
+          sed -e 's/>Element</Zyfra Talks/' \
+            -e 's/content="Element"/content="Zyfra Talks"/' \
+            -e "s|https.*opengraph.png|${CONFIG_URL%/*}/zyfra/opengraph.png|" \
+            -e 's/Element requires/Zyfra Talks requires/' \
+            -i deploys/element-${{ inputs.version }}/index.html
+          sed -e "s|https://element.io|${CONFIG_URL%/*}|" \
+            -i deploys/element-${{ inputs.version }}/welcome.html
+          sed -e "s|https://Element|$CONFIG_DIR|" \
+            -e 's/#76CFA6/#1B4A1B/' \
+            -i deploys/element-${{ inputs.version }}/manifest.json
         env:
           CONFIG_URL: ${{ secrets.CONFIG_URL }}
           CONFIG_DIR: ${{ inputs.config }}
