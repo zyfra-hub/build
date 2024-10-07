@@ -34,7 +34,9 @@ jobs:
       - name: Get config
         run: |
           mkdir -p "${{ inputs.config }}"
-          curl -sSfLo "${{ inputs.config }}/config.json" "${{ secrets.CONFIG_URL }}"
+          curl -sSfLo "${{ inputs.config }}/config.json" "$CONFIG_URL"
+        env:
+          CONFIG_URL: ${{ secrets.CONFIG_URL }}
 
       - uses: actions/setup-node@v4
         with:

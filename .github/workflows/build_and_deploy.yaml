@@ -129,35 +129,38 @@ jobs:
             if [ -d "win-$arch" ]; then
               pushd "packages.$CONFIG_DIR/install/win32/$arch"
               curl \
-                -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
+                -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
                 -T "$(find . -type f -iname "*.exe" | xargs -0 -n1 -- basename)" \
-                "${{ secrets.UPPLOADS_URL }}/$CONFIG_DIR-$arch.exe"
+                "$UPPLOADS_URL/$CONFIG_DIR-$arch.exe"
               popd
             fi
           done
           if [ -d macos ]; then
             pushd "packages.$CONFIG_DIR/install/macos"
             curl \
-              -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
+              -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.dmg" | xargs -0 -n1 -- basename)" \
-              "${{ secrets.UPPLOADS_URL }}/$CONFIG_DIR.dmg"
+              "$UPPLOADS_URL/$CONFIG_DIR.dmg"
             popd
           fi
           if [ -d linux-amd64-sqlcipher-static ]; then
             pushd "packages.$CONFIG_DIR/install/linux/glibc-x86-64"
             curl \
-              -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
+              -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "${{ secrets.UPPLOADS_URL }}/$CONFIG_DIR-amd64.tar.gz"
+              "$UPPLOADS_URL/$CONFIG_DIR-amd64.tar.gz"
             popd
           fi
           if [ -d linux-arm64-sqlcipher-static ]; then
             pushd "packages.$CONFIG_DIR/install/linux/glibc-aarch64"
             curl \
-              -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
+              -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "${{ secrets.UPPLOADS_URL }}/$CONFIG_DIR-arm64.tar.gz"
+              "$UPPLOADS_URL/$CONFIG_DIR-arm64.tar.gz"
             popd
           fi
         env:
           CONFIG_DIR: ${{ inputs.config }}
+          UPPLOADS_URL: ${{ secrets.UPPLOADS_URL }}
+          UPPLOADS_USER: ${{ secrets.UPPLOADS_USER }}
+          UPPLOADS_PASS: ${{ secrets.UPPLOADS_PASS }}
