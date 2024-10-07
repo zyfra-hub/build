@@ -9,10 +9,6 @@ on:
         type: string
         required: true
         description: "The version tag to fetch, or 'develop', will pick automatically if not passed"
-      confg-url:
-        type: string
-        required: true
-        description: Url for download config.json
     secrets:
       CONFIG_URL:
         required: true
