@@ -22,7 +22,7 @@ jobs:
   hak:
     runs-on: ${{ inputs.arch == 'arm64' && 'dind-l-arm64' || 'ubuntu-latest' }}
     env:
-      HAK_DOCKER_IMAGE: ghcr.io/zyfra-hub/build
+      HAK_DOCKER_IMAGE: ghcr.io/element-hq/element-desktop-dockerbuild
     outputs:
       cache-key: ${{ steps.cache-key.outputs.key }}
       arch: ${{ steps.config.outputs.arch }}

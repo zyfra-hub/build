@@ -53,8 +53,8 @@ jobs:
       - name: Overrides
         shell: pwsh
         run: |
-          Copy-Item -Path .\overides\build\ -Destination .\ -Recurse -Force
-          Copy-Item -Path .\overides\res\ -Destination .\ -Recurse -Force
+          Copy-Item -Path .\overrides\build\ -Destination .\ -Recurse -Force
+          Copy-Item -Path .\overrides\res\ -Destination .\ -Recurse -Force
 
       - name: Cache .hak
         id: cache
