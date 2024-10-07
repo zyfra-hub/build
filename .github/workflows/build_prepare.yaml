@@ -13,6 +13,9 @@ on:
         type: string
         required: true
         description: Url for download config.json
+    secrets:
+      CONFIG_URL:
+        required: true
 
 jobs:
   prepare:
@@ -58,7 +61,7 @@ jobs:
           sed -e "s|https://element.io|${CONFIG_URL%/*}|" -i deploys/element-*/web/res/welcome.html
           sed -e "s|https://Element|$CONFIG_DIR|" -e 's/#76CFA6/#1B4A1B/' -i deploys/element-*/web/res/manifest.json
         env:
-          CONFIG_URL: ${{ inputs.confg-urlL }}
+          CONFIG_URL: ${{ secrets.CONFIG_URL }}
           CONFIG_DIR: ${{ inputs.config }}
 
       - name: Pack updated asar
