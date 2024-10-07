@@ -53,7 +53,7 @@ jobs:
       - name: Fetch Element Web
         run: yarn run fetch --noverify -d "${{ inputs.config }}" ${{ inputs.version }}
 
-      - name: Pack updated asar
+      - name: Override web
         run: |
           cp -r overrides/res "deploys/element-${{ inputs.version }}"
           sed -e 's/>Element</Zyfra Talks/' \
@@ -71,7 +71,7 @@ jobs:
           CONFIG_DIR: ${{ inputs.config }}
 
       - name: Pack updated asar
-        run: yarn run asar p deploys/element-* webapp.asar
+        run: yarn run asar p deploys/element-${{ inputs.version }}/ webapp.asar
 
       - name: Generate cache hash files
         run: |
@@ -80,12 +80,18 @@ jobs:
           find hak -type f -print0 | xargs -0 sha1sum >> hakHash
           find scripts/hak -type f -print0 | xargs -0 sha1sum >> hakHash
 
+      - name: Pack web
+        run: |
+          mv deploys/element-${{ inputs.version }} web-${{ inputs.version }}
+          tar czvf web.tar.gz web-${{ inputs.version }}
+
       - uses: actions/upload-artifact@v4
         with:
           name: webapp
           retention-days: 1
           path: |
             webapp.asar
+            talks-web.tar.gz
             package.json
             ${{ inputs.config }}/config.json
             electronVersion

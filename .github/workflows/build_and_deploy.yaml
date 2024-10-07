@@ -125,7 +125,6 @@ jobs:
           CONFIG_DIR: ${{ inputs.config }}
 
       - name: "Push artifacts"
-        if: needs.prepare.outputs.nightly-version == ''
         run: |
           for arch in x64 ia32 arm64; do
             if [ -d "win-$arch" ]; then
@@ -161,6 +160,7 @@ jobs:
               "$UPPLOADS_URL/$CONFIG_DIR-arm64.tar.gz"
             popd
           fi
+          curl -u "$UPPLOADS_USER:$UPPLOADS_PASS" -T web.tar.gz "$UPPLOADS_URL/$CONFIG_DIR-web.tar.gz"
         env:
           CONFIG_DIR: ${{ inputs.config }}
           UPPLOADS_URL: ${{ secrets.UPPLOADS_URL }}
