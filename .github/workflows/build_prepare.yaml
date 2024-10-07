@@ -73,5 +73,6 @@ jobs:
           path: |
             webapp.asar
             package.json
+            ${{ inputs.config }}/config.json
             electronVersion
             hakHash

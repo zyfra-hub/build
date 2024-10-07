@@ -25,6 +25,16 @@ on:
         required: true
         type: boolean
         default: true
+      config:
+        description: Config path
+        required: true
+        type: string
+        default: talks.hub
+      version:
+        description: Version
+        required: true
+        type: string
+        default: v1.11.79
 
 run-name: Element Desktop
 concurrency: ${{ github.workflow }}
@@ -33,8 +43,8 @@ jobs:
   prepare:
     uses: ./.github/workflows/build_prepare.yaml
     with:
-      config: ${{ env.CONFIG_DIR }}
-      version: ${{ env.VERSION }}
+      config: ${{ inputs.config }}
+      version: ${{ inputs.version }}
 
   windows:
     if: github.event_name != 'workflow_dispatch' || inputs.windows
@@ -46,7 +56,7 @@ jobs:
     secrets: inherit
     with:
       arch: ${{ matrix.arch }}
-      version: ${{ env.VERSION }}
+      version: ${{ inputs.version }}
 
   macos:
     if: github.event_name != 'workflow_dispatch' || inputs.macos
@@ -55,7 +65,7 @@ jobs:
     secrets: inherit
     with:
       base-url: https://packages.element.io/${{ needs.prepare.outputs.packages-dir }}
-      version: ${{ env.VERSION }}
+      version: ${{ inputs.version }}
 
   linux:
     if: github.event_name != 'workflow_dispatch' || inputs.linux
@@ -68,7 +78,7 @@ jobs:
     with:
       arch: ${{ matrix.arch }}
       sqlcipher: ${{ matrix.sqlcipher }}
-      version: ${{ env.VERSION }}
+      version: ${{ inputs.version }}
 
   deploy:
     needs:
@@ -87,61 +97,65 @@ jobs:
         run: |
           for arch in x64 ia32 arm64; do
             if [ -d "win-$arch" ]; then
-              mkdir -p "packages.${{ env.CONFIG_DIR }}/{install,update}/win32/$arch"
-              mv win-$arch/squirrel-windows*/*.exe "packages.${{ env.CONFIG_DIR }}/install/win32/$arch/"
-              mv win-$arch/squirrel-windows*/*.nupkg "packages.${{ env.CONFIG_DIR }}/update/win32/$arch/"
-              mv win-$arch/squirrel-windows*/RELEASES "packages.${{ env.CONFIG_DIR }}/update/win32/$arch/"
+              mkdir -p "packages.$CONFIG_DIR/{install,update}/win32/$arch"
+              mv win-$arch/squirrel-windows*/*.exe "packages.$CONFIG_DIR/install/win32/$arch/"
+              mv win-$arch/squirrel-windows*/*.nupkg "packages.$CONFIG_DIR/update/win32/$arch/"
+              mv win-$arch/squirrel-windows*/RELEASES "packages.$CONFIG_DIR/update/win32/$arch/"
             fi
           done
           if [ -d macos ]; then
-            mkdir -p "packages.${{ env.CONFIG_DIR }}/{install,update}/macos"
-            mv macos/*.dmg "packages.${{ env.CONFIG_DIR }}/install/macos/"
-            mv macos/*-mac.zip "packages.${{ env.CONFIG_DIR }}/update/macos/"
-            mv macos/*.json "packages.${{ env.CONFIG_DIR }}/update/macos/"
+            mkdir -p "packages.$CONFIG_DIR/{install,update}/macos"
+            mv macos/*.dmg "packages.$CONFIG_DIR/install/macos/"
+            mv macos/*-mac.zip "packages.$CONFIG_DIR/update/macos/"
+            mv macos/*.json "packages.$CONFIG_DIR/update/macos/"
           fi
           if [ -d linux-amd64-sqlcipher-static ]; then
-            mkdir -p "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-x86-64"
-            mv linux-amd64-sqlcipher-static/*.tar.gz "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-x86-64"
+            mkdir -p "packages.$CONFIG_DIR/install/linux/glibc-x86-64"
+            mv linux-amd64-sqlcipher-static/*.tar.gz "packages.$CONFIG_DIR/install/linux/glibc-x86-64"
           fi
           if [ -d linux-arm64-sqlcipher-static ]; then
-            mkdir -p "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-aarch64"
-            mv linux-arm64-sqlcipher-static/*.tar.gz "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-aarch64"
+            mkdir -p "packages.$CONFIG_DIR/install/linux/glibc-aarch64"
+            mv linux-arm64-sqlcipher-static/*.tar.gz "packages.$CONFIG_DIR/install/linux/glibc-aarch64"
           fi
+        env:
+          CONFIG_DIR: ${{ inputs.config }}
 
       - name: "Push artifacts"
         if: needs.prepare.outputs.nightly-version == ''
         run: |
           for arch in x64 ia32 arm64; do
             if [ -d "win-$arch" ]; then
-              pushd "packages.${{ env.CONFIG_DIR }}/install/win32/$arch"
+              pushd "packages.$CONFIG_DIR/install/win32/$arch"
               curl \
                 -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
                 -T "$(find . -type f -iname "*.exe" | xargs -0 -n1 -- basename)" \
-                "${{ secrets.UPPLOADS_URL }}/${{ env.CONFIG_DIR }}-$arch.exe"
+                "${{ secrets.UPPLOADS_URL }}/$CONFIG_DIR-$arch.exe"
               popd
             fi
           done
           if [ -d macos ]; then
-            pushd "packages.${{ env.CONFIG_DIR }}/install/macos"
+            pushd "packages.$CONFIG_DIR/install/macos"
             curl \
               -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
               -T "$(find . -type f -iname "*.dmg" | xargs -0 -n1 -- basename)" \
-              "${{ secrets.UPPLOADS_URL }}/${{ env.CONFIG_DIR }}.dmg"
+              "${{ secrets.UPPLOADS_URL }}/$CONFIG_DIR.dmg"
             popd
           fi
           if [ -d linux-amd64-sqlcipher-static ]; then
-            pushd "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-x86-64"
+            pushd "packages.$CONFIG_DIR/install/linux/glibc-x86-64"
             curl \
               -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "${{ secrets.UPPLOADS_URL }}/${{ env.CONFIG_DIR }}-amd64.tar.gz"
+              "${{ secrets.UPPLOADS_URL }}/$CONFIG_DIR-amd64.tar.gz"
             popd
           fi
           if [ -d linux-arm64-sqlcipher-static ]; then
-            pushd "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-aarch64"
+            pushd "packages.$CONFIG_DIR/install/linux/glibc-aarch64"
             curl \
               -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "${{ secrets.UPPLOADS_URL }}/${{ env.CONFIG_DIR }}-arm64.tar.gz"
+              "${{ secrets.UPPLOADS_URL }}/$CONFIG_DIR-arm64.tar.gz"
             popd
           fi
+        env:
+          CONFIG_DIR: ${{ inputs.config }}
