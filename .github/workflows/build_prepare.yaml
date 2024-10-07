@@ -38,7 +38,9 @@ jobs:
         shell: bash
         run: |
           mkdir -p "${{ inputs.config }}"
-          curl -sSfLo "${{ inputs.config }}/config.json" "${{ inputs.confg-url }}"
+          curl -sSfLo "${{ inputs.config }}/config.json" "$CONFIG_URL"
+        env:
+          CONFIG_URL: ${{ secrets.CONFIG_URL }}
 
       - uses: actions/setup-node@v4
         with:
