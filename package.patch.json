@@ -1,0 +1,8 @@
+{
+    "name": "talks-hub",
+    "productName": "Zyfra Talks",
+    "homepage": "https://talks.hub.zyfra.com",
+    "repository": {
+        "url": "https://github.com/zyfra-hub/talks-desktop"
+    }
+}
