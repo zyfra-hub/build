@@ -1,0 +1,77 @@
+on:
+  workflow_call:
+    inputs:
+      config:
+        type: string
+        required: true
+        description: "The config directory to use"
+      version:
+        type: string
+        required: false
+        description: "The version tag to fetch, or 'develop', will pick automatically if not passed"
+
+jobs:
+  prepare:
+    name: Prepare Web
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          name: element-hq/element-desktop
+          ref: ${{ inputs.version }}
+
+      - uses: actions/checkout@v4
+        with:
+          path: ./overrides
+          ref: web
+
+      - name: Update package.json
+        run: |
+          mv package.json package.old.json
+          jq -s '.[0] * .[1]' package.old.json overrides/package.patch.json > package.json
+
+      - name: Get config
+        run: |
+          mkdir -p "./${{ inputs.config }}"
+          curl -sSfLo "${{ secrets.CONFIG_URL }}" "${{ inputs.config }}"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+          cache: "yarn"
+
+      - name: Install Deps
+        run: "yarn install --frozen-lockfile"
+
+      - name: Fetch Element Web
+        run: yarn run fetch --noverify -d "${{ inputs.config }}" ${{ inputs.version }}
+
+      - name: Pack updated asar
+        run: |
+          cp -r overrides/res deploys/element-*
+          sed -e "s|https://element.io|${CONFIG_URL%/*}|" -i deploys/element-*/web/res/welcome.html
+          sed -e "s|https://Element|$CONFIG_DIR|" -e 's/#76CFA6/#1B4A1B/' -i deploys/element-*/web/res/manifest.json
+        env:
+          CONFIG_URL: ${{ secrets.CONFIG_URL }}
+          CONFIG_DIR: ${{ env.CONFIG_DIR }}
+
+      - name: Pack updated asar
+        run: yarn run asar p deploys/element-* webapp.asar
+
+      - name: Generate cache hash files
+        run: |
+          yarn run --silent electron --version > electronVersion
+          jq -erc .hakDependencies package.json | sha1sum > hakHash
+          find hak -type f -print0 | xargs -0 sha1sum >> hakHash
+          find scripts/hak -type f -print0 | xargs -0 sha1sum >> hakHash
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: webapp
+          retention-days: 1
+          path: |
+            webapp.asar
+            package.json
+            electronVersion
+            hakHash

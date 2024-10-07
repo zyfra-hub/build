@@ -1,0 +1,147 @@
+name: Build and Deploy
+on:
+  release:
+    types: [published]
+
+  workflow_dispatch:
+    inputs:
+      macos:
+        description: Build macOS
+        required: true
+        type: boolean
+        default: true
+      windows:
+        description: Build Windows
+        required: true
+        type: boolean
+        default: true
+      linux:
+        description: Build Linux
+        required: true
+        type: boolean
+        default: true
+      deploy:
+        description: Deploy artifacts
+        required: true
+        type: boolean
+        default: true
+
+run-name: Element Desktop
+concurrency: ${{ github.workflow }}
+
+jobs:
+  prepare:
+    uses: ./.github/workflows/build_prepare.yaml
+    with:
+      config: ${{ env.CONFIG_DIR }}
+      version: ${{ env.VERSION }}
+
+  windows:
+    if: github.event_name != 'workflow_dispatch' || inputs.windows
+    name: Windows ${{ matrix.arch }}
+    strategy:
+      matrix:
+        arch: [ia32, x64]
+    uses: ./.github/workflows/build_windows.yaml
+    secrets: inherit
+    with:
+      arch: ${{ matrix.arch }}
+      version: ${{ env.VERSION }}
+
+  macos:
+    if: github.event_name != 'workflow_dispatch' || inputs.macos
+    name: macOS
+    uses: ./.github/workflows/build_macos.yaml
+    secrets: inherit
+    with:
+      base-url: https://packages.element.io/${{ needs.prepare.outputs.packages-dir }}
+      version: ${{ env.VERSION }}
+
+  linux:
+    if: github.event_name != 'workflow_dispatch' || inputs.linux
+    name: Linux ${{ matrix.arch }}
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+        sqlcipher: [static]
+    uses: ./.github/workflows/build_linux.yaml
+    with:
+      arch: ${{ matrix.arch }}
+      sqlcipher: ${{ matrix.sqlcipher }}
+      version: ${{ env.VERSION }}
+
+  deploy:
+    needs:
+      - prepare
+      - macos
+      - linux
+      - windows
+    runs-on: ubuntu-latest
+    name: Deploy
+    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Prepare artifacts for deployment
+        run: |
+          for arch in x64 ia32 arm64; do
+            if [ -d "win-$arch" ]; then
+              mkdir -p "packages.${{ env.CONFIG_DIR }}/{install,update}/win32/$arch"
+              mv win-$arch/squirrel-windows*/*.exe "packages.${{ env.CONFIG_DIR }}/install/win32/$arch/"
+              mv win-$arch/squirrel-windows*/*.nupkg "packages.${{ env.CONFIG_DIR }}/update/win32/$arch/"
+              mv win-$arch/squirrel-windows*/RELEASES "packages.${{ env.CONFIG_DIR }}/update/win32/$arch/"
+            fi
+          done
+          if [ -d macos ]; then
+            mkdir -p "packages.${{ env.CONFIG_DIR }}/{install,update}/macos"
+            mv macos/*.dmg "packages.${{ env.CONFIG_DIR }}/install/macos/"
+            mv macos/*-mac.zip "packages.${{ env.CONFIG_DIR }}/update/macos/"
+            mv macos/*.json "packages.${{ env.CONFIG_DIR }}/update/macos/"
+          fi
+          if [ -d linux-amd64-sqlcipher-static ]; then
+            mkdir -p "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-x86-64"
+            mv linux-amd64-sqlcipher-static/*.tar.gz "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-x86-64"
+          fi
+          if [ -d linux-arm64-sqlcipher-static ]; then
+            mkdir -p "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-aarch64"
+            mv linux-arm64-sqlcipher-static/*.tar.gz "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-aarch64"
+          fi
+
+      - name: "Push artifacts"
+        if: needs.prepare.outputs.nightly-version == ''
+        run: |
+          for arch in x64 ia32 arm64; do
+            if [ -d "win-$arch" ]; then
+              pushd "packages.${{ env.CONFIG_DIR }}/install/win32/$arch"
+              curl \
+                -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
+                -T "$(find . -type f -iname "*.exe" | xargs -0 -n1 -- basename)" \
+                "${{ secrets.UPPLOADS_URL }}/${{ env.CONFIG_DIR }}-$arch.exe"
+              popd
+            fi
+          done
+          if [ -d macos ]; then
+            pushd "packages.${{ env.CONFIG_DIR }}/install/macos"
+            curl \
+              -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
+              -T "$(find . -type f -iname "*.dmg" | xargs -0 -n1 -- basename)" \
+              "${{ secrets.UPPLOADS_URL }}/${{ env.CONFIG_DIR }}.dmg"
+            popd
+          fi
+          if [ -d linux-amd64-sqlcipher-static ]; then
+            pushd "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-x86-64"
+            curl \
+              -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
+              -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
+              "${{ secrets.UPPLOADS_URL }}/${{ env.CONFIG_DIR }}-amd64.tar.gz"
+            popd
+          fi
+          if [ -d linux-arm64-sqlcipher-static ]; then
+            pushd "packages.${{ env.CONFIG_DIR }}/install/linux/glibc-aarch64"
+            curl \
+              -u "${{ secrets.UPPLOADS_USER }}:${{ secrets.UPPLOADS_PASS }}" \
+              -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
+              "${{ secrets.UPPLOADS_URL }}/${{ env.CONFIG_DIR }}-arm64.tar.gz"
+            popd
+          fi

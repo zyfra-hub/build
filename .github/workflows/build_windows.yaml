@@ -1,0 +1,125 @@
+defaults:
+  run:
+    shell: powershell
+on:
+  workflow_call:
+    inputs:
+      arch:
+        type: string
+        required: true
+        description: "The architecture to build for, one of 'x64' | 'ia32' | 'arm64'"
+      version:
+        type: string
+        required: false
+        description: "Version string to override the one in package.json, used for non-release builds"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: nbucic/variable-mapper@0673f6891a0619ba7c002ecfed0f9f4f39017b6f
+        id: config
+        with:
+          key: "${{ inputs.arch }}"
+          export_to: output
+          map: |
+            {
+              "x64": {
+                "target": "x86_64-pc-windows-msvc"
+              },
+              "arm64": {
+                "target": "aarch64-pc-windows-msvc",
+                "build-args": "--arm64",
+                "arch": "amd64_arm64"
+              },
+              "ia32": {
+                "target": "i686-pc-windows-msvc",
+                "build-args": "--ia32",
+                "arch": "x86"
+              }
+            }
+
+      - uses: actions/checkout@v4
+        with:
+          name: element-hq/element-desktop
+          ref: ${{ inputs.version }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: webapp
+
+      - uses: actions/checkout@v4
+        with:
+          path: ./overrides
+          ref: desktop
+      - name: Overrides
+        shell: pwsh
+        run: |
+          Copy-Item -Path .\overides\build\ -Destination .\ -Recurse -Force
+          Copy-Item -Path .\overides\res\ -Destination .\ -Recurse -Force
+
+      - name: Cache .hak
+        id: cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-${{ inputs.arch }}-${{ hashFiles('hakHash', 'electronVersion') }}
+          path: |
+            ./.hak
+
+      - name: Set up build tools
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: ${{ steps.config.outputs.arch || inputs.arch }}
+
+      # ActiveTCL package on choco is from 2015,
+      # this one is newer but includes more than we need
+      - name: Choco install tclsh
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          choco install -y magicsplat-tcl-tk --no-progress
+          echo "${HOME}/AppData/Local/Apps/Tcl86/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Choco install NetWide Assembler
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          choco install -y nasm --no-progress
+          echo "C:/Program Files/NASM" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Install Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+          rustup target add ${{ steps.config.outputs.target }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+          cache: "yarn"
+
+      # Does not need branch matching as only analyses this layer
+      - name: Install Deps
+        run: "yarn install --frozen-lockfile"
+
+      - name: Build Natives
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          refreshenv
+          yarn build:native --target ${{ steps.config.outputs.target }}
+
+      - run: yarn run build:ts
+      - run: yarn run build:res
+
+      - name: Build App
+        run: |
+          yarn electron-builder --publish never -w ${{ steps.config.outputs.build-args }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-${{ inputs.arch }}
+          path: |
+            dist
+          retention-days: 1
