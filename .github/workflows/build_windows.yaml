@@ -10,7 +10,7 @@ on:
         description: "The architecture to build for, one of 'x64' | 'ia32' | 'arm64'"
       version:
         type: string
-        required: false
+        required: true
         description: "Version string to override the one in package.json, used for non-release builds"
 
 jobs:

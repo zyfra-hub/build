@@ -8,18 +8,10 @@ on:
         type: string
         required: false
         description: "Version string to override the one in package.json, used for non-release builds"
-      sign:
-        type: string
-        required: false
-        description: "Whether to sign & notarise the build, requires 'packages.element.io' environment"
-      base-url:
-        type: string
-        required: false
-        description: "The URL to which the output will be deployed."
+
 jobs:
   build:
     runs-on: macos-14 # M1
-    environment: ${{ inputs.sign && 'packages.element.io' || '' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,37 +69,11 @@ jobs:
         run: |
           echo "ED_NIGHTLY=${{ inputs.version }}" >> $GITHUB_ENV
 
-      - name: "[Unsigned] Build App"
+      - name: "Build App"
         run: |
           yarn build:universal --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-
-      - name: Generate releases.json
-        if: inputs.base-url
-        run: |
-          PKG_JSON_VERSION=$(cat package.json | jq -r .version)
-          LATEST=$(find dist -type f -iname "*-mac.zip" | xargs -0 -n1 -- basename)
-          # Encode spaces in the URL as Squirrel.Mac complains about bad JSON otherwise
-          URL="${{ inputs.base-url }}/update/macos/${LATEST// /%20}"
-
-          jq -n --arg version "${VERSION:-$PKG_JSON_VERSION}" --arg url "$URL" '
-            {
-              currentRelease: $version,
-              releases: [{
-                version: $version,
-                updateTo: {
-                  version: $version,
-                  url: $url,
-                },
-              }],
-            }
-          ' > dist/releases.json
-          jq -n --arg url "$URL" '
-            { url: $url }
-          ' > dist/releases-legacy.json
-        env:
-          VERSION: ${{ inputs.version }}
 
       # We exclude mac-universal as the unpacked app takes forever to upload and zip and dmg already contains it
       - name: Upload Artifacts
