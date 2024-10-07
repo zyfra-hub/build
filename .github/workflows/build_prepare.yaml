@@ -7,8 +7,12 @@ on:
         description: "The config directory to use"
       version:
         type: string
-        required: false
+        required: true
         description: "The version tag to fetch, or 'develop', will pick automatically if not passed"
+      confg-url:
+        type: string
+        required: true
+        description: Url for download config.json
 
 jobs:
   prepare:
@@ -35,9 +39,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p "${{ inputs.config }}"
-          curl -sSfLo "${{ inputs.config }}/config.json" "$CONFIG_URL"
-        env:
-          CONFIG_URL: ${{ secrets.CONFIG_URL }}
+          curl -sSfLo "${{ inputs.config }}/config.json" "${{ inputs.confg-url }}"
 
       - uses: actions/setup-node@v4
         with:
@@ -56,7 +58,7 @@ jobs:
           sed -e "s|https://element.io|${CONFIG_URL%/*}|" -i deploys/element-*/web/res/welcome.html
           sed -e "s|https://Element|$CONFIG_DIR|" -e 's/#76CFA6/#1B4A1B/' -i deploys/element-*/web/res/manifest.json
         env:
-          CONFIG_URL: ${{ secrets.CONFIG_URL }}
+          CONFIG_URL: ${{ inputs.confg-urlL }}
           CONFIG_DIR: ${{ inputs.config }}
 
       - name: Pack updated asar

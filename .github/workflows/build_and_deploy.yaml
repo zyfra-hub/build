@@ -45,6 +45,7 @@ jobs:
     with:
       config: ${{ inputs.config }}
       version: ${{ inputs.version }}
+      confg-url: ${{ secrets.CONFIG_URL }}
 
   windows:
     if: github.event_name != 'workflow_dispatch' || inputs.windows
