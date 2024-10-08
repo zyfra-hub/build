@@ -174,12 +174,8 @@ jobs:
               "$UPPLOADS_URL/${{ inputs.version }}/${CONFIG_DIR}_${{ inputs.version }}_arm64.deb"
             popd
           fi
-          if [ -f web.tar.gz ]; then
-            curl -u "$UPPLOADS_USER:$UPPLOADS_PASS" -T web.tar.gz \
-              "$UPPLOADS_URL/${{ inputs.version }}/${CONFIG_DIR}_web_${{ inputs.version }}.tar.gz"
-          else
-            ls -la ./*
-          fi
+          curl -u "$UPPLOADS_USER:$UPPLOADS_PASS" -T talks-web/web.tar.gz \
+            "$UPPLOADS_URL/${{ inputs.version }}/${CONFIG_DIR}_web_${{ inputs.version }}.tar.gz"
         env:
           CONFIG_DIR: ${{ inputs.config }}
           UPPLOADS_URL: ${{ secrets.UPPLOADS_URL }}
