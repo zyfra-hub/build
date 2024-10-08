@@ -101,14 +101,14 @@ jobs:
         run: |
           for arch in x64 ia32 arm64; do
             if [ -d "win-$arch" ]; then
-              mkdir -p "packages.$CONFIG_DIR/{install,update}/win32/$arch"
+              mkdir -p "packages.$CONFIG_DIR/"{install,update}"/win32/$arch"
               mv win-$arch/squirrel-windows*/*.exe "packages.$CONFIG_DIR/install/win32/$arch/"
               mv win-$arch/squirrel-windows*/*.nupkg "packages.$CONFIG_DIR/update/win32/$arch/"
               mv win-$arch/squirrel-windows*/RELEASES "packages.$CONFIG_DIR/update/win32/$arch/"
             fi
           done
           if [ -d macos ]; then
-            mkdir -p "packages.$CONFIG_DIR/{install,update}/macos"
+            mkdir -p "packages.$CONFIG_DIR/"{install,update}"/macos"
             mv macos/*.dmg "packages.$CONFIG_DIR/install/macos/"
             mv macos/*-mac.zip "packages.$CONFIG_DIR/update/macos/"
             mv macos/*.json "packages.$CONFIG_DIR/update/macos/"
@@ -149,7 +149,7 @@ jobs:
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/$CONFIG_DIR-amd64-${{ inputs.version }}.tar.gz"
+              "$UPPLOADS_URL/$CONFIG_DIR-${{ inputs.version }}-amd64.tar.gz"
             popd
           fi
           if [ -d linux-arm64-sqlcipher-static ]; then
@@ -157,7 +157,7 @@ jobs:
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/$CONFIG_DIR-arm64-${{ inputs.version }}.tar.gz"
+              "$UPPLOADS_URL/$CONFIG_DIR-${{ inputs.version }}-arm64.tar.gz"
             popd
           fi
           curl -u "$UPPLOADS_USER:$UPPLOADS_PASS" -T web.tar.gz "$UPPLOADS_URL/$CONFIG_DIR-web-${{ inputs.version }}.tar.gz"
