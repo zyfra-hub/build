@@ -105,21 +105,23 @@ jobs:
               mv win-$arch/squirrel-windows*/*.exe "packages.$CONFIG_DIR/install/win32/$arch/"
               mv win-$arch/squirrel-windows*/*.nupkg "packages.$CONFIG_DIR/update/win32/$arch/"
               mv win-$arch/squirrel-windows*/RELEASES "packages.$CONFIG_DIR/update/win32/$arch/"
+              mv win-$arch/*.msi "packages.$CONFIG_DIR/install/win32/$arch/"
             fi
           done
           if [ -d macos ]; then
             mkdir -p "packages.$CONFIG_DIR/"{install,update}"/macos"
             mv macos/*.dmg "packages.$CONFIG_DIR/install/macos/"
             mv macos/*-mac.zip "packages.$CONFIG_DIR/update/macos/"
-            mv macos/*.json "packages.$CONFIG_DIR/update/macos/"
           fi
           if [ -d linux-amd64-sqlcipher-static ]; then
             mkdir -p "packages.$CONFIG_DIR/install/linux/glibc-x86-64"
             mv linux-amd64-sqlcipher-static/*.tar.gz "packages.$CONFIG_DIR/install/linux/glibc-x86-64"
+            mv linux-amd64-sqlcipher-static/*.deb "packages.$CONFIG_DIR/install/linux/glibc-x86-64"
           fi
           if [ -d linux-arm64-sqlcipher-static ]; then
             mkdir -p "packages.$CONFIG_DIR/install/linux/glibc-aarch64"
             mv linux-arm64-sqlcipher-static/*.tar.gz "packages.$CONFIG_DIR/install/linux/glibc-aarch64"
+            mv linux-arm64-sqlcipher-static/*.deb "packages.$CONFIG_DIR/install/linux/glibc-aarch64"
           fi
         env:
           CONFIG_DIR: ${{ inputs.config }}
@@ -132,7 +134,11 @@ jobs:
               curl \
                 -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
                 -T "$(find . -type f -iname "*.exe" | xargs -0 -n1 -- basename)" \
-                "$UPPLOADS_URL/$CONFIG_DIR-${{ inputs.version }}-$arch.exe"
+                "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_$arch.exe"
+              curl \
+                -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
+                -T "$(find . -type f -iname "*.msi" | xargs -0 -n1 -- basename)" \
+                "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_$arch.msi"
               popd
             fi
           done
@@ -141,7 +147,7 @@ jobs:
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.dmg" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/$CONFIG_DIR-${{ inputs.version }}.dmg"
+              "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}.dmg"
             popd
           fi
           if [ -d linux-amd64-sqlcipher-static ]; then
@@ -149,7 +155,11 @@ jobs:
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/$CONFIG_DIR-${{ inputs.version }}-amd64.tar.gz"
+              "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_amd64.tar.gz"
+            curl \
+              -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
+              -T "$(find . -type f -iname "*.deb" | xargs -0 -n1 -- basename)" \
+              "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_amd64.deb"
             popd
           fi
           if [ -d linux-arm64-sqlcipher-static ]; then
@@ -157,10 +167,15 @@ jobs:
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/$CONFIG_DIR-${{ inputs.version }}-arm64.tar.gz"
+              "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_arm64.tar.gz"
+            curl \
+              -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
+              -T "$(find . -type f -iname "*.deb" | xargs -0 -n1 -- basename)" \
+              "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_arm64.deb"
             popd
           fi
-          curl -u "$UPPLOADS_USER:$UPPLOADS_PASS" -T web.tar.gz "$UPPLOADS_URL/$CONFIG_DIR-web-${{ inputs.version }}.tar.gz"
+          curl -u "$UPPLOADS_USER:$UPPLOADS_PASS" -T web.tar.gz \
+            "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_web_${{ inputs.version }}.tar.gz"
         env:
           CONFIG_DIR: ${{ inputs.config }}
           UPPLOADS_URL: ${{ secrets.UPPLOADS_URL }}
