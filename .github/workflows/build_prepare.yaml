@@ -55,11 +55,12 @@ jobs:
 
       - name: Override web
         run: |
-          cp -r overrides/res "deploys/element-${{ inputs.version }}"
-          sed -e 's/>Element</Zyfra Talks/' \
+          cp -r overrides/res/* "deploys/element-${{ inputs.version }}"
+          sed -e 's/>Element</>Zyfra Talks</' \
             -e 's/content="Element"/content="Zyfra Talks"/' \
             -e "s|https.*opengraph.png|${CONFIG_URL%/*}/zyfra/opengraph.png|" \
             -e 's/Element requires/Zyfra Talks requires/' \
+            -e 's/#da532c/#1B4A1B/' \
             -i deploys/element-${{ inputs.version }}/index.html
           sed -e "s|https://element.io|${CONFIG_URL%/*}|" \
             -i deploys/element-${{ inputs.version }}/welcome.html
@@ -91,8 +92,14 @@ jobs:
           retention-days: 1
           path: |
             webapp.asar
-            talks-web.tar.gz
             package.json
             ${{ inputs.config }}/config.json
             electronVersion
             hakHash
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: talks-web
+          retention-days: 1
+          path: |
+            talks-web.tar.gz
