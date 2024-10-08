@@ -152,19 +152,9 @@ jobs:
       - name: Overrides
         run: cp -r overrides/* ./
 
-      - name: Debug 2 # TODO
-        run: |
-          cat package.json
-          ls -la ./*
-
       - uses: actions/download-artifact@v4
         with:
           name: webapp
-
-      - name: Debug 2 # TODO
-        run: |
-          cat package.json
-          ls -la ./*
 
       - name: Load .hak
         id: cache

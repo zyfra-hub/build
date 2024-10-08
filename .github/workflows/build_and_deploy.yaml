@@ -54,7 +54,7 @@ jobs:
     name: Windows ${{ matrix.arch }}
     strategy:
       matrix:
-        arch: [ia32, x64]
+        arch: [x64] # [ia32, x64]
     uses: ./.github/workflows/build_windows.yaml
     secrets: inherit
     with:
@@ -76,7 +76,7 @@ jobs:
     name: Linux ${{ matrix.arch }}
     strategy:
       matrix:
-        arch: [amd64, arm64]
+        arch: [amd64] # [amd64, arm64]
         sqlcipher: [static]
     uses: ./.github/workflows/build_linux.yaml
     with:
@@ -132,7 +132,7 @@ jobs:
               curl \
                 -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
                 -T "$(find . -type f -iname "*.exe" | xargs -0 -n1 -- basename)" \
-                "$UPPLOADS_URL/$CONFIG_DIR-$arch.exe"
+                "$UPPLOADS_URL/$CONFIG_DIR-${{ inputs.version }}-$arch.exe"
               popd
             fi
           done
@@ -141,7 +141,7 @@ jobs:
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.dmg" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/$CONFIG_DIR.dmg"
+              "$UPPLOADS_URL/$CONFIG_DIR-${{ inputs.version }}.dmg"
             popd
           fi
           if [ -d linux-amd64-sqlcipher-static ]; then
@@ -149,7 +149,7 @@ jobs:
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/$CONFIG_DIR-amd64.tar.gz"
+              "$UPPLOADS_URL/$CONFIG_DIR-amd64-${{ inputs.version }}.tar.gz"
             popd
           fi
           if [ -d linux-arm64-sqlcipher-static ]; then
@@ -157,10 +157,10 @@ jobs:
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/$CONFIG_DIR-arm64.tar.gz"
+              "$UPPLOADS_URL/$CONFIG_DIR-arm64-${{ inputs.version }}.tar.gz"
             popd
           fi
-          curl -u "$UPPLOADS_USER:$UPPLOADS_PASS" -T web.tar.gz "$UPPLOADS_URL/$CONFIG_DIR-web.tar.gz"
+          curl -u "$UPPLOADS_USER:$UPPLOADS_PASS" -T web.tar.gz "$UPPLOADS_URL/$CONFIG_DIR-web-${{ inputs.version }}.tar.gz"
         env:
           CONFIG_DIR: ${{ inputs.config }}
           UPPLOADS_URL: ${{ secrets.UPPLOADS_URL }}

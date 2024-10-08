@@ -102,4 +102,4 @@ jobs:
           name: talks-web
           retention-days: 1
           path: |
-            talks-web.tar.gz
+            web.tar.gz
