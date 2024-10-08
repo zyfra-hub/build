@@ -84,7 +84,7 @@ jobs:
           )
           for f in "${files[@]}"; do
             [ ! -f "$f" ] && continue
-            find . -type f \( -name "${f%.*}"'*' -and ! -name "$f" \) -exec mv -t "$f" {} +
+            find . -type f \( -name "${f%.*}"'*' -and ! -name "$f" \) -exec mv "$f" {} +
           done
         env:
           CONFIG_URL: ${{ secrets.CONFIG_URL }}
