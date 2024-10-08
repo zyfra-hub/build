@@ -134,11 +134,11 @@ jobs:
               curl \
                 -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
                 -T "$(find . -type f -iname "*.exe" | xargs -0 -n1 -- basename)" \
-                "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_$arch.exe"
+                "$UPPLOADS_URL/${{ inputs.version }}/${CONFIG_DIR}_${{ inputs.version }}_$arch.exe"
               curl \
                 -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
                 -T "$(find . -type f -iname "*.msi" | xargs -0 -n1 -- basename)" \
-                "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_$arch.msi"
+                "$UPPLOADS_URL/${{ inputs.version }}/${CONFIG_DIR}_${{ inputs.version }}_$arch.msi"
               popd
             fi
           done
@@ -147,7 +147,7 @@ jobs:
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.dmg" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}.dmg"
+              "$UPPLOADS_URL/${{ inputs.version }}/${CONFIG_DIR}_${{ inputs.version }}.dmg"
             popd
           fi
           if [ -d linux-amd64-sqlcipher-static ]; then
@@ -155,11 +155,11 @@ jobs:
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_amd64.tar.gz"
+              "$UPPLOADS_URL/${{ inputs.version }}/${CONFIG_DIR}_${{ inputs.version }}_amd64.tar.gz"
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.deb" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_amd64.deb"
+              "$UPPLOADS_URL/${{ inputs.version }}/${CONFIG_DIR}_${{ inputs.version }}_amd64.deb"
             popd
           fi
           if [ -d linux-arm64-sqlcipher-static ]; then
@@ -167,15 +167,19 @@ jobs:
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.tar.gz" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_arm64.tar.gz"
+              "$UPPLOADS_URL/${{ inputs.version }}/${CONFIG_DIR}_${{ inputs.version }}_arm64.tar.gz"
             curl \
               -u "$UPPLOADS_USER:$UPPLOADS_PASS" \
               -T "$(find . -type f -iname "*.deb" | xargs -0 -n1 -- basename)" \
-              "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_${{ inputs.version }}_arm64.deb"
+              "$UPPLOADS_URL/${{ inputs.version }}/${CONFIG_DIR}_${{ inputs.version }}_arm64.deb"
             popd
           fi
-          curl -u "$UPPLOADS_USER:$UPPLOADS_PASS" -T web.tar.gz \
-            "$UPPLOADS_URL/${{ inputs.version }}/$CONFIG_DIR_web_${{ inputs.version }}.tar.gz"
+          if [ -f web.tar.gz ]; then
+            curl -u "$UPPLOADS_USER:$UPPLOADS_PASS" -T web.tar.gz \
+              "$UPPLOADS_URL/${{ inputs.version }}/${CONFIG_DIR}_web_${{ inputs.version }}.tar.gz"
+          else
+            ls -la ./*
+          fi
         env:
           CONFIG_DIR: ${{ inputs.config }}
           UPPLOADS_URL: ${{ secrets.UPPLOADS_URL }}
