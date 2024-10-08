@@ -54,6 +54,7 @@ jobs:
         run: yarn run fetch --noverify -d "${{ inputs.config }}" ${{ inputs.version }}
 
       - name: Override web
+        shell: bash
         run: |
           cp -r overrides/res/* "deploys/element-${{ inputs.version }}"
           sed -e 's/>Element</>Zyfra Talks</' \
@@ -67,6 +68,24 @@ jobs:
           sed -e "s|https://Element|$CONFIG_DIR|" \
             -e 's/#76CFA6/#1B4A1B/' \
             -i deploys/element-${{ inputs.version }}/manifest.json
+          cd deploys/element-${{ inputs.version }}/vector-icons
+          files=(
+            browserconfig.xml
+            apple-touch-icon-180.png
+            apple-touch-icon-152.png
+            apple-touch-icon-144.png
+            apple-touch-icon-120.png
+            apple-touch-icon-114.png
+            apple-touch-icon-76.png
+            apple-touch-icon-72.png
+            apple-touch-icon-60.png
+            apple-touch-icon-57.png
+            favicon.ico
+          )
+          for f in "${files[@]}"; do
+            [ ! -f "$f" ] && continue
+            find . -type f \( -name "${f%.*}"'*' -and ! -name "$f" \) -exec mv -t "$f" {} +
+          done
         env:
           CONFIG_URL: ${{ secrets.CONFIG_URL }}
           CONFIG_DIR: ${{ inputs.config }}
