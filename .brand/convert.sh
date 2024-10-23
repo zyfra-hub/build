@@ -5,9 +5,9 @@ set -eu
 # https://pngquant.org/
 # https://github.com/JackMordaunt/icns
 
-_i_logo=./.brand/talks.hub.zyfra.com_logo.svg
-_i_button=./.brand/talks.hub.zyfra.com_button.svg
-_i_inner=./.brand/talks.hub.zyfra.com_inner.svg
+_i_logo=./.brand/talks.hub.zyfra.com.svg
+_i_button=./.brand/talks.hub.zyfra.com.svg
+_i_inner=./.brand/talks.hub.zyfra.com.svg
 _i_outer=./.brand/talks.hub.zyfra.com_outer.svg
 
 
@@ -59,7 +59,7 @@ spinner() {
   local svg_in="$1" sv_out="$2" gif="${3:-spinner.gif}"
   [ ! -f "$svg_in" ] || [ ! -f "$sv_out" ] && return 1
 
-  magick -background None -quality 100 "$svg_in" -resize 256 -density 72 \
+  magick -background None -quality 100 "$svg_in" -resize 196 -density 72 \
     .overlay.png
   magick "$sv_out" -resize 320x320 -duplicate 16 -distort SRT %[fx:t*90/n] \
     -set delay 6 -loop 0 "$gif"
