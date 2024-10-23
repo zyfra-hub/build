@@ -5,6 +5,11 @@ set -eu
 # https://pngquant.org/
 # https://github.com/JackMordaunt/icns
 
+_i_logo=./.brand/talks.hub.zyfra.com_logo.svg
+_i_button=./.brand/talks.hub.zyfra.com_button.svg
+_i_inner=./.brand/talks.hub.zyfra.com_inner.svg
+_i_outer=./.brand/talks.hub.zyfra.com_outer.svg
+
 
 svg::png() {
   local svg="$1" png="${2:-${1%.svg}}.png" size="${3:-1024}" ppi="${4:-72}"
@@ -96,34 +101,34 @@ logo() {
 
 dimensions=(16x16 24x24 48x48 64x64 96x96 128x128 256x256 512x512)
 for d in "${dimensions[@]}"; do
-  svg::png ./talks.hub.zyfra.com_button.svg "./desktop/build/icons/$d" "$d"
+  svg::png "$_i_button" "./desktop/build/icons/$d" "$d"
 done
-svg::ico ./talks.hub.zyfra.com_button.svg ./desktop/build/icon
-svg::icns ./talks.hub.zyfra.com_button.svg ./desktop/build/icon
-spinner ./talks.hub.zyfra.com_inner.svg ./talks.hub.zyfra.com_outer.svg ./desktop/build/install-spinner.gif
+svg::ico "$_i_button" ./desktop/build/icon
+svg::icns "$_i_button" ./desktop/build/icon
+spinner "$_i_inner" "$_i_outer" ./desktop/build/install-spinner.gif
 
 
-opengraph ./talks.hub.zyfra.com_logo.svg ./web/res/themes/element/img/logos
-cp ./talks.hub.zyfra.com_logo.svg ./web/res/themes/element/img/logos/element-logo.svg
-logo ./talks.hub.zyfra.com_button.svg ./web/res/themes/element/img/logos
+opengraph "$_i_logo" ./web/res/themes/element/img/logos
+cp "$_i_logo" ./web/res/themes/element/img/logos/element-logo.svg
+logo "$_i_button" ./web/res/themes/element/img/logos
 
-svg::ico ./talks.hub.zyfra.com_button.svg ./web/res/vector-icons/favicon 96,32,16
+svg::ico "$_i_button" ./web/res/vector-icons/favicon 96,32,16
 
 dimensions=(24 48 50 76 88 120 150 152 180 300 1024)
 for d in "${dimensions[@]}"; do
-  svg::png ./talks.hub.zyfra.com_button.svg "./web/res/vector-icons/$d" "$d"
+  svg::png "$_i_logo" "./web/res/vector-icons/$d" "$d"
 done
 
 dimensions=(57 60 72 76 114 120 144 152 180)
 for d in "${dimensions[@]}"; do
-  svg::png ./talks.hub.zyfra.com_button.svg "./web/res/vector-icons/apple-touch-icon-$d" "$d"
+  svg::png "$_i_button" "./web/res/vector-icons/apple-touch-icon-$d" "$d"
 done
 
 dimensions=(70 150 310)
 for d in "${dimensions[@]}"; do
-  svg::png ./talks.hub.zyfra.com_button.svg "./web/res/vector-icons/mstile-$d" "$d"
+  svg::png "$_i_button" "./web/res/vector-icons/mstile-$d" "$d"
 done
 
-svg::png_extended ./talks.hub.zyfra.com_logo.svg "./web/res/vector-icons/620x300" 620 300
-svg::png_extended ./talks.hub.zyfra.com_logo.svg "./web/res/vector-icons/1240x600" 1240 600
-svg::png_extended ./talks.hub.zyfra.com_logo.svg "./web/res/vector-icons/mstile-310x150" 310 150
+svg::png_extended "$_i_logo" "./web/res/vector-icons/620x300" 620 300
+svg::png_extended "$_i_logo" "./web/res/vector-icons/1240x600" 1240 600
+svg::png_extended "$_i_logo" "./web/res/vector-icons/mstile-310x150" 310 150
