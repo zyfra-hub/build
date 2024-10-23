@@ -66,11 +66,6 @@ jobs:
           pip3 install setuptools
           yarn build:native:universal
 
-      - name: "[Nightly] Resolve version"
-        if: inputs.version != ''
-        run: |
-          echo "ED_NIGHTLY=${{ inputs.version }}" >> $GITHUB_ENV
-
       - name: "Build App"
         run: |
           yarn build:universal --publish never

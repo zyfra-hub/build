@@ -34,7 +34,7 @@ on:
         description: Version
         required: true
         type: string
-        default: v1.11.80
+        default: v1.11.82
 
 run-name: Element Desktop
 concurrency: ${{ github.workflow }}
